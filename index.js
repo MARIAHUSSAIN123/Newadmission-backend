@@ -6,32 +6,40 @@ const Student = require('./models/Student');
 
 const app = express();
 
-// --- CORS Configuration (Sabse Zaroori) ---
-app.use(cors()); // Ye default har jagah se request allow karega
-app.options('*', cors()); // Preflight requests ke liye lazmi hai
+// ✅ CORS FIX (strong version)
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+app.options("*", cors());
 
 app.use(express.json());
 
-// --- MongoDB Connection ---
+// ✅ MongoDB
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB Atlas Connected ✅"))
-    .catch(err => console.error("MongoDB Error ❌:", err));
+  .then(() => console.log("MongoDB Atlas Connected ✅"))
+  .catch(err => console.error(err));
 
-// --- API Routes ---
+// ✅ Routes
 app.get('/', (req, res) => res.send("Backend is live!"));
 
 app.post('/api/admission', async (req, res) => {
-    try {
-        const newStudent = new Student(req.body);
-        await newStudent.save();
-        res.status(201).json({ message: "Admission Form Submitted Successfully!" });
-    } catch (error) {
-        console.error("Error:", error);
-        res.status(500).json({ error: "Server Error" });
-    }
+  try {
+    const newStudent = new Student(req.body);
+    await newStudent.save();
+    res.status(201).json({ message: "Admission Form Submitted Successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server Error" });
+  }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// ✅ Vercel FIX (MOST IMPORTANT)
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+}
 
 module.exports = app;
