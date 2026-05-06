@@ -10,12 +10,17 @@ const app = express();
 app.use(express.json());
 
 // CORS configuration: Ismein aapne apne frontend ka link allow kar diya hai
-app.use(cors({
-    origin: ["https://new-admission-frontend.vercel.app", "http://localhost:5173"],
-    methods: ["POST", "GET"],
-    credentials: true
-}));
+const cors = require('cors');
 
+const corsOptions = {
+    origin: "https://new-admission-frontend.vercel.app", // Sirf apne frontend ko ijazat dein
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // OPTIONS lazmi shamil karein
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Har route par preflight request allow karein
 // --- MONGOOSE CONNECTION ---
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Atlas Connected ✅"))
