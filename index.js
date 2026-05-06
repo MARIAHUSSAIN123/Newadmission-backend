@@ -2,44 +2,49 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+
 const Student = require('./models/Student');
 
 const app = express();
 
-// ✅ CORS FIX (strong version)
+// ✅ CORS FIX (important)
 app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+    origin: "https://new-admission-frontend.vercel.app",
+    methods: ["GET", "POST"],
+    credentials: true
 }));
-
-app.options("*", cors());
 
 app.use(express.json());
 
-// ✅ MongoDB
+// ✅ MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Atlas Connected ✅"))
-  .catch(err => console.error(err));
+    .then(() => console.log("MongoDB Connected ✅"))
+    .catch(err => console.error("MongoDB Error ❌:", err));
 
-// ✅ Routes
-app.get('/', (req, res) => res.send("Backend is live!"));
-
-app.post('/api/admission', async (req, res) => {
-  try {
-    const newStudent = new Student(req.body);
-    await newStudent.save();
-    res.status(201).json({ message: "Admission Form Submitted Successfully!" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server Error" });
-  }
+// ✅ Test Route
+app.get('/', (req, res) => {
+    res.send("Backend is live!");
 });
 
-// ✅ Vercel FIX (MOST IMPORTANT)
-if (process.env.NODE_ENV !== "production") {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => console.log(`Server running on ${PORT}`));
-}
+// ✅ Admission Route
+app.post('/api/admission', async (req, res) => {
+    try {
+        const newStudent = new Student(req.body);
+        await newStudent.save();
 
+        res.status(201).json({
+            message: "Form submitted successfully"
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: "Server error"
+        });
+    }
+});
+
+// ❌ Vercel pe listen nahi lagate
+// app.listen(...)
+
+// ✅ EXPORT (VERY IMPORTANT)
 module.exports = app;
