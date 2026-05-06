@@ -6,65 +6,32 @@ const Student = require('./models/Student');
 
 const app = express();
 
-// --- MIDDLEWARE ---
+// --- CORS Configuration (Sabse Zaroori) ---
+app.use(cors()); // Ye default har jagah se request allow karega
+app.options('*', cors()); // Preflight requests ke liye lazmi hai
+
 app.use(express.json());
 
-// CORS configuration: Ismein aapne apne frontend ka link allow kar diya hai
-const cors = require('cors');
-
-const corsOptions = {
-    origin: "https://new-admission-frontend.vercel.app", // Sirf apne frontend ko ijazat dein
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // OPTIONS lazmi shamil karein
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-};
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Har route par preflight request allow karein
-// --- MONGOOSE CONNECTION ---
+// --- MongoDB Connection ---
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Atlas Connected ✅"))
-    .catch(err => console.error("MongoDB Connection Error ❌:", err));
+    .catch(err => console.error("MongoDB Error ❌:", err));
 
-// --- API ROUTES ---
+// --- API Routes ---
+app.get('/', (req, res) => res.send("Backend is live!"));
 
-// Root route for testing
-app.get('/', (req, res) => {
-    res.send("Backend is running and connected to Frontend!");
-});
-
-// Admission Submission Route
 app.post('/api/admission', async (req, res) => {
     try {
-        const { fullName, email, course, phone } = req.body;
-        
-        // Validation check
-        if (!fullName || !email || !course || !phone) {
-            return res.status(400).json({ error: "All fields are required" });
-        }
-
-        const newStudent = new Student({ fullName, email, course, phone });
+        const newStudent = new Student(req.body);
         await newStudent.save();
-        
-        res.status(201).json({ 
-            success: true,
-            message: "Admission Form Submitted Successfully! 🚀" 
-        });
+        res.status(201).json({ message: "Admission Form Submitted Successfully!" });
     } catch (error) {
-        console.error("Submission Error:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        console.error("Error:", error);
+        res.status(500).json({ error: "Server Error" });
     }
 });
 
-// --- SERVER SETUP ---
 const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-// Ye check zaroori hai taake local par server chale aur Vercel par function behave kare
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
-    });
-}
-
-// Vercel ke liye export karna zaroori hai
 module.exports = app;
